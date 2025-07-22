@@ -9,8 +9,9 @@ import {
   LoginResponse,
   ProfileResponse,
 } from "../interface";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { socialPayload } from "@/app/book/interface";
+import { Session } from "inspector/promises";
 // ❌ Hapus: import { get } from "http"; → Tidak digunakan
 // ❌ Hapus: import { headers } from "next/headers"; → Tidak digunakan
 // ❌ Hapus: import { Session } from "inspector/promises"; → Salah pakai dan tidak cocok digunakan di sini
@@ -22,6 +23,7 @@ export const sociallogin = async (payload: socialPayload): Promise<LoginResponse
 const useAuthModule = () => {
   const { toastError, toastSuccess, toastWarning } = useToast();
   const router = useRouter();
+  const { data: session } = useSession()
 
   // Function untuk register
   const register = async (payload: RegisterPayload): Promise<RegisterResponse> => {
@@ -82,11 +84,7 @@ const useAuthModule = () => {
   const getProfile = async (): Promise<ProfileResponse> => {
     const token = ""; // 🔧 TODO: Ambil accessToken dari cookies/session/localStorage jika perlu
     return axiosClient
-      .get("/auth/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .get("/auth/profile")
       .then((res) => res.data);
   };
 
@@ -96,6 +94,7 @@ const useAuthModule = () => {
       queryFn: () => getProfile(),
       select: (response: any) => response,
       staleTime: 1000 * 60 * 60,
+      enabled:session!== undefined,
       refetchInterval: 1000 * 60 * 60,
       refetchOnWindowFocus: false,
     });
